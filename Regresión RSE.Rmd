@@ -1,0 +1,134 @@
+---
+title: "RLM de RSE y áreas funcionales de la empresa"
+output:
+  pdf_document: default
+  html_document: default
+date: "2024-04-24"
+---
+
+# Regresión Responsabilidad Social Empresarial
+
+## Generación del modelo con 13 variables
+
+### Variables:
+
+**IRSE**  = Índice de Responsabilidad Social Empresarial \
+**RH** = Recursos humanos \
+**D** = Dirección \
+**VE** = Valoración del entorno \
+**AM** = Análisis del mercado \
+**P** = Proveedores \
+**F** = Finanzas \
+**GV** = Gestión de ventas \
+**PO** = Producción-operación \
+**I** = Innovación \
+**M** = Mercadotecnia \
+**SCE** = Satisfacción con la empresa \
+**VC** = Ventaja competitiva \
+**AV** = Ámbito de ventas \
+
+*Nota*: **todos los valores son parte de un índice, van de 0 a 1.**
+
+```{r}
+# Instalamos paquetes para leer nuestro excel
+install.packages("xlsx")
+library(xlsx)
+```
+
+Importamos el excel
+```{r}
+# Cargamos la libreria
+library(readxl)
+```
+
+```{r}
+datos <- read_excel("Reg_R.xlsx")
+datos
+```
+
+```{r}
+# Nuestro modelo con todas las variables (13) es mod
+# Corremos el modelo nombrado mod
+mod <- lm(IRSE ~ RH + D + VE + AM + P + F + GV + PO + I + M + SCE + VC + AV, data = datos )
+summary(mod)
+```
+
+Seleccionamos los mejores predictores
+Utilizamos stepwise mixto.
+```{r}
+step(object = mod, direction = "both", trace = 1)
+```
+
+**Los mejores predictores para el modelo son 6**
+
+## Nombramos nuestro modelo ajustado "mod1"
+
+```{r}
+# mod1 = modelo ajustado
+mod1 <- (lm(formula = IRSE ~ RH + D + VE + AM + SCE + AV, data = datos))
+summary(mod1)
+```
+
+Mostramos el intervalo de confianza para cada uno de los coeficientes parciales de regresión:
+
+```{r}
+confint(lm(formula = IRSE ~ RH + D + VE + AM + SCE + AV, data = datos))
+```
+
+Validamos las condiciones para la regresión múltiple lineal
+```{r}
+# Instalamos nuestro paquetes para graficar
+install.packages("ggplot2")
+install.packages("gridExtra")
+```
+Graficamos
+```{r}
+library(ggplot2)
+library(gridExtra)
+plot1 <- ggplot(data = datos, aes(RH, mod1$residuals)) +
+    geom_point() + geom_smooth(color = "firebrick") + geom_hline(yintercept = 0) +
+    theme_bw()
+plot2 <- ggplot(data = datos, aes(D, mod1$residuals)) +
+    geom_point() + geom_smooth(color = "firebrick") + geom_hline(yintercept = 0) +
+    theme_bw()
+plot3 <- ggplot(data = datos, aes(VE, mod1$residuals)) +
+    geom_point() + geom_smooth(color = "firebrick") + geom_hline(yintercept = 0) +
+    theme_bw()
+plot4 <- ggplot(data = datos, aes(AM, mod1$residuals)) +
+    geom_point() + geom_smooth(color = "firebrick") + geom_hline(yintercept = 0) +
+    theme_bw()
+plot5 <- ggplot(data = datos, aes(SCE, mod1$residuals)) +
+    geom_point() + geom_smooth(color = "firebrick") + geom_hline(yintercept = 0) +
+    theme_bw()
+plot6 <- ggplot(data = datos, aes(AV, mod1$residuals)) +
+    geom_point() + geom_smooth(color = "firebrick") + geom_hline(yintercept = 0) +
+    theme_bw()
+grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6)
+```
+Se cumple la linealidad para todos los predictores
+
+
+## Distribución normal de los residuos:
+
+
+```{r}
+qqnorm(mod1$residuals)
+qqline(mod1$residuals)
+```
+
+```{r}
+shapiro.test(mod1$residuals)
+```
+Tanto el análisis gráfico como es test de hipótesis confirman la normalidad.
+
+```{r}
+ggplot(data = datos, aes(mod1$fitted.values, mod1$residuals)) +
+geom_point() +
+geom_smooth(color = "firebrick", se = FALSE) +
+geom_hline(yintercept = 0) +
+theme_bw()
+```
+No hay evidencias de falta de homocedasticidad.
+
+No multicolinialidad:
+
